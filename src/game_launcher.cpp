@@ -49,6 +49,8 @@
 #include "wesnothd_connection_error.hpp"
 #include "wml_exception.hpp" // for wml_exception
 
+#if !defined(__EMSCRIPTEN__)
+
 #ifdef __APPLE__
 
 //
@@ -79,6 +81,8 @@
 #include <boost/process/child.hpp>
 
 #endif
+
+#endif // !defined(__EMSCRIPTEN__)
 
 #include <algorithm> // for copy, max, min, stable_sort
 #include <new>
@@ -803,6 +807,9 @@ bool game_launcher::goto_editor()
 
 void game_launcher::start_wesnothd()
 {
+#ifdef __EMSCRIPTEN__
+	throw game::mp_server_error("Embedded wesnothd is not supported on web builds.");
+#else
 	std::string wesnothd_program = "";
 	if(!prefs::get().get_mp_server_program_name().empty()) {
 		wesnothd_program = prefs::get().get_mp_server_program_name();
@@ -847,6 +854,7 @@ void game_launcher::start_wesnothd()
 		WRN_GENERAL << "Failed to start server " << wesnothd_program << ":\n" << e.what();
 		throw game::mp_server_error("Starting MP server failed!");
 	}
+#endif
 }
 
 bool game_launcher::play_multiplayer(mp_mode mode)
