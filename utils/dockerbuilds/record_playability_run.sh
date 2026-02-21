@@ -64,7 +64,8 @@ run_probe_native() {
 }
 
 run_probe_docker() {
-  local image="${WESNOTH_PLAYWRIGHT_DOCKER_IMAGE:-mcr.microsoft.com/playwright:v1.52.0-jammy}"
+  local pw_version="1.57.0"
+  local image="${WESNOTH_PLAYWRIGHT_DOCKER_IMAGE:-mcr.microsoft.com/playwright:v${pw_version}-jammy}"
   docker run --rm \
     -v "${REPO_ROOT}:/workspace" \
     -v "wesnoth-playwright-node:/opt/wesnoth-playwright-node" \
@@ -72,11 +73,14 @@ run_probe_docker() {
     "${image}" \
     bash -lc "
       set -euo pipefail
+      pw_version='${pw_version}'
       mkdir -p /opt/wesnoth-playwright-node
       cd /opt/wesnoth-playwright-node
-      if [[ ! -d node_modules/playwright ]]; then
+      if [[ ! -f node_modules/.pw_version ]] || [[ \"\\\$(cat node_modules/.pw_version)\" != \"\${pw_version}\" ]]; then
+        rm -rf node_modules package.json package-lock.json
         npm init -y >/dev/null 2>&1 || true
-        npm install --no-audit --no-fund --silent playwright@1.52.0 >/dev/null
+        npm install --no-audit --no-fund --silent playwright@\${pw_version} >/dev/null
+        echo \"\${pw_version}\" > node_modules/.pw_version
       fi
       export NODE_PATH=/opt/wesnoth-playwright-node/node_modules
       cd /workspace/utils/dockerbuilds
