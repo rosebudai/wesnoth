@@ -30,7 +30,16 @@ else
 fi
 
 timestamp_utc="$(date -u +%Y%m%dT%H%M%SZ)"
-run_root="${REPO_ROOT}/output/web-playability-runs"
+history_info="$("${SCRIPT_DIR}/record_web_history.sh")"
+history_file="$(printf '%s\n' "${history_info}" | awk -F= '$1=="history_file"{print $2}' | tail -n 1)"
+bundle_dir="$(printf '%s\n' "${history_info}" | awk -F= '$1=="bundle_dir"{print $2}' | tail -n 1)"
+if [[ -z "${history_file}" ]]; then
+  history_file="missing"
+fi
+if [[ -z "${bundle_dir}" ]]; then
+  bundle_dir="${REPO_ROOT}/output/web-build-bundles/${EXP_ID}-${timestamp_utc}-missing-bundle"
+fi
+run_root="${bundle_dir}/playability-runs"
 mkdir -p "${run_root}"
 
 console_json="${run_root}/${EXP_ID}-${timestamp_utc}-console.json"
@@ -105,10 +114,6 @@ case "${mode}" in
     ;;
 esac
 
-"${SCRIPT_DIR}/record_web_history.sh" >/dev/null
-
-latest_history="$(ls -1t "${REPO_ROOT}/output/web-build-history/${EXP_ID}-"*.txt 2>/dev/null | head -n 1 || true)"
-
 classification="$(node -e 'const fs=require("fs");const p=process.argv[1];const d=JSON.parse(fs.readFileSync(p,"utf8"));process.stdout.write(String(d.classification||"UNKNOWN"));' "${result_json}")"
 
 {
@@ -120,7 +125,8 @@ classification="$(node -e 'const fs=require("fs");const p=process.argv[1];const 
   echo "git_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
   echo "git_commit=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
   echo "experiment_env_file=${EXPERIMENT_ENV_FILE}"
-  echo "history_file=${latest_history:-missing}"
+  echo "history_file=${history_file}"
+  echo "bundle_dir=${bundle_dir}"
   echo "console_json=${console_json}"
   echo "result_json=${result_json}"
   echo "screenshot_png=${screenshot_png}"
@@ -130,6 +136,13 @@ classification="$(node -e 'const fs=require("fs");const p=process.argv[1];const 
     echo "screenshot_sha256=missing"
   fi
 } > "${meta_txt}"
+
+legacy_root="${REPO_ROOT}/output/web-playability-runs"
+mkdir -p "${legacy_root}"
+ln -sfn "${console_json}" "${legacy_root}/$(basename "${console_json}")"
+ln -sfn "${result_json}" "${legacy_root}/$(basename "${result_json}")"
+ln -sfn "${screenshot_png}" "${legacy_root}/$(basename "${screenshot_png}")"
+ln -sfn "${meta_txt}" "${legacy_root}/$(basename "${meta_txt}")"
 
 echo "recorded playability run:"
 echo "  meta: ${meta_txt}"

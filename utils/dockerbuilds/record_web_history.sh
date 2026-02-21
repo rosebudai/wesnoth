@@ -31,10 +31,26 @@ else
   hash_file() { shasum -a 256 "$1" | awk '{print $1}'; }
 fi
 
+copy_tree() {
+  local src="$1"
+  local dst="$2"
+  mkdir -p "${dst}"
+  if command -v rsync >/dev/null 2>&1; then
+    rsync -a --delete "${src}/" "${dst}/"
+  else
+    rm -rf "${dst}"
+    mkdir -p "${dst}"
+    cp -a "${src}/." "${dst}/"
+  fi
+}
+
 timestamp_utc="$(date -u +%Y%m%dT%H%M%SZ)"
 history_dir="${REPO_ROOT}/output/web-build-history"
 mkdir -p "${history_dir}"
 history_file="${history_dir}/${EXP_ID}-${timestamp_utc}.txt"
+bundle_root="${REPO_ROOT}/output/web-build-bundles"
+bundle_dir="${bundle_root}/${EXP_ID}-${timestamp_utc}"
+bundle_build_dir="${bundle_dir}/build"
 
 {
   echo "timestamp_utc=${timestamp_utc}"
@@ -42,6 +58,7 @@ history_file="${history_dir}/${EXP_ID}-${timestamp_utc}.txt"
   echo "experiment_id=${EXP_ID}"
   echo "experiment_note=${EXP_DESCRIPTION:-}"
   echo "experiment_env_file=${EXPERIMENT_ENV_FILE}"
+  echo "bundle_dir=${bundle_dir}"
   echo "git_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
   echo "git_commit=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
   echo "output_dir=${OUTPUT_DIR}"
@@ -61,4 +78,14 @@ history_file="${history_dir}/${EXP_ID}-${timestamp_utc}.txt"
   done
 } > "${history_file}"
 
-echo "created ${history_file}"
+mkdir -p "${bundle_dir}"
+copy_tree "${OUTPUT_DIR}" "${bundle_build_dir}"
+cp -f "${history_file}" "${bundle_dir}/build-history.txt"
+if [[ -f "${EXPERIMENT_ENV_FILE}" ]]; then
+  cp -f "${EXPERIMENT_ENV_FILE}" "${bundle_dir}/experiment.env"
+fi
+
+{
+  echo "history_file=${history_file}"
+  echo "bundle_dir=${bundle_dir}"
+}
