@@ -2,10 +2,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 cd "${REPO_ROOT}"
 
-EXPERIMENT_ENV_FILE="${WESNOTH_EXPERIMENT_ENV_FILE:-${REPO_ROOT}/utils/dockerbuilds/current_experiment.env}"
+EXPERIMENT_ENV_FILE="${WESNOTH_EXPERIMENT_ENV_FILE:-${REPO_ROOT}/utils/dockerbuilds/emscripten/current_experiment.env}"
 if [[ ! -f "${EXPERIMENT_ENV_FILE}" ]]; then
   echo "missing experiment config: ${EXPERIMENT_ENV_FILE}" >&2
   exit 1
@@ -83,8 +83,8 @@ run_probe_docker() {
         echo \"\${pw_version}\" > node_modules/.pw_version
       fi
       export NODE_PATH=/opt/wesnoth-playwright-node/node_modules
-      cd /workspace/utils/dockerbuilds
-      python3 ./serve_coi.py --host 127.0.0.1 --port 8040 --dir ./emscriptenbuild >/tmp/wesnoth-serve.log 2>&1 &
+      cd /workspace/utils/dockerbuilds/emscripten
+      python3 ./serve_coi.py --host 127.0.0.1 --port 8040 --dir ../emscriptenbuild >/tmp/wesnoth-serve.log 2>&1 &
       srv=\$!
       cleanup() { kill \${srv} >/dev/null 2>&1 || true; wait \${srv} >/dev/null 2>&1 || true; }
       trap cleanup EXIT

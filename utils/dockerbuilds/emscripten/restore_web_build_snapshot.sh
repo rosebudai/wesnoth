@@ -7,7 +7,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 snapshot_tag="$1"
-repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
+repo_root="$(cd "$(dirname "$0")/../../.." && pwd)"
 snapshot_dir="$repo_root/output/web-build-snapshots/$snapshot_tag"
 src_bundle="$snapshot_dir/bundle"
 dst_build="$repo_root/utils/dockerbuilds/emscriptenbuild"
