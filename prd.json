@@ -17,7 +17,7 @@
       "title": "Theme config loading",
       "description": "Create theme config loading, validation, and two starter theme files.\n\nFiles to create:\n- utils/reskin/config.py — ThemeConfig dataclass, load_theme() function, ValidationError exception\n- utils/reskin/tests/test_config.py — tests for loading by path, loading by name, missing file, missing field\n- utils/reskin/themes/cyberpunk.json — name, description, prompt, palette (browns=#0a0a2e, greens=#00ff88, silvers=#c0c0ff, reds=#ff0044)\n- utils/reskin/themes/fairy_princess.json — name, description, prompt, palette (browns=#e8b4d8, greens=#98fb98, silvers=#fff0f5, reds=#ff69b4)\n\nThemeConfig fields: name (str), description (str), prompt (str), palette (Dict[str, str]).\nRequired fields for validation: name, prompt, palette.\nload_theme() accepts either a file path or a theme name (resolves to themes/<name>.json).\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 2 for full code.",
       "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_config.py -v",
-      "status": "pending",
+      "status": "passed",
       "retries": 0
     },
     {

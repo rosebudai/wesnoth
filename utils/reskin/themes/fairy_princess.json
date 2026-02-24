@@ -1,0 +1,11 @@
+{
+    "name": "fairy_princess",
+    "description": "Enchanted pastel warriors with sparkles and flower motifs",
+    "prompt": "fairy tale princess style, pastel colors, sparkles, flowers, magical glow",
+    "palette": {
+        "browns": "#e8b4d8",
+        "greens": "#98fb98",
+        "silvers": "#fff0f5",
+        "reds": "#ff69b4"
+    }
+}
