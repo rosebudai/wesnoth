@@ -80,3 +80,4 @@ raises ValueError if missing, transform raises NotImplementedError as stub) and
 tests/test_nano_banana.py (2 tests: env var loading and missing key error).
 All 2 tests passed on first run.
 Status: PASSED
+Status: PASSED
