@@ -49,7 +49,7 @@
       "title": "Palette swap transform",
       "description": "Create the algorithmic palette swap transform for icons.\n\nFiles to create:\n- utils/reskin/transforms/palette_swap.py — palette_swap(image_path, palette) -> bytes\n- utils/reskin/tests/test_palette_swap.py — tests for output validity, color shifting, transparency preservation\n\nHow it works:\n1. Open image as RGBA with Pillow\n2. For each non-transparent pixel, classify into a color family by HSV hue:\n   - reds: hue 345-360 or 0-15\n   - browns: hue 15-45\n   - greens: hue 75-165\n   - silvers: saturation < 0.15 and value > 0.5\n3. If pixel's family has a mapping in the palette, shift to target color:\n   - Use target hue and saturation\n   - Blend brightness: 60% source + 40% target\n4. Output as PNG bytes\n\nHelper functions: _hex_to_rgb, _rgb_to_hsv (uses colorsys), _classify_pixel_color.\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 6 for full code.",
       "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_palette_swap.py -v",
-      "status": "pending",
+      "status": "passed",
       "retries": 0
     },
     {
