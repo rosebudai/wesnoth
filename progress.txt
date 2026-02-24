@@ -106,3 +106,4 @@ Test processes all 630 assets (394 sprites + 63 portraits + 173 icons) via --dry
 Verifies: exit code 0, manifest has 500+ completed, output dirs for units/portraits/attacks exist.
 Full test suite: all 37 tests passed (4 config + 9 discovery + 3 providers + 6 manifest + 4 palette + 4 ai_reskin + 2 nano_banana + 4 cli + 1 integration).
 Status: PASSED
+Status: PASSED
