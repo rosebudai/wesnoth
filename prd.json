@@ -41,7 +41,7 @@
       "title": "Manifest progress tracking",
       "description": "Create the manifest module for tracking which assets have been processed.\n\nFiles to create:\n- utils/reskin/manifest.py — Manifest class\n- utils/reskin/tests/test_manifest.py — tests for create/save/load/mark/summary\n\nManifest.__init__(path, theme, faction, provider) — creates new manifest data dict.\nManifest.load(path) — classmethod, loads existing manifest from JSON file.\nManifest.save() — writes to disk (creates parent dirs with os.makedirs).\nManifest.is_completed(relative_path, source_hash) — True if status=completed AND hash matches.\nManifest.mark_completed(relative_path, source_hash, output_path) — sets status, hash, path, timestamp. Calls save() immediately.\nManifest.mark_failed(relative_path, error) — sets status=failed, error message, increments attempts count. Calls save() immediately.\nManifest.get_status(relative_path) — returns the asset entry dict or None.\nManifest.summary() — returns dict with completed/failed/total counts.\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 5 for full code.",
       "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_manifest.py -v",
-      "status": "pending",
+      "status": "passed",
       "retries": 0
     },
     {
