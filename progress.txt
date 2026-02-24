@@ -1,0 +1,10 @@
+# Progress Log — reskin-pipeline
+# Generated from docs/plans/2026-02-24-reskin-pipeline.md
+# Started: 2026-02-24
+--- Iteration 1 | story-1 | 2026-02-24 22:00:25 ---
+Previous iteration started but did not create any files.
+
+--- Iteration 2 | story-1 | 2026-02-24 ---
+Created all directories (providers/, transforms/, themes/, tests/) and files (__init__.py x4, .gitignore).
+Verification passed: all directories exist, all __init__.py files exist, .gitignore contains output/.
+Status: PASSED

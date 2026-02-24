@@ -1,0 +1,88 @@
+{
+  "name": "reskin-pipeline",
+  "branchName": "mike/reskin-pipeline",
+  "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/ -v",
+  "maxRetries": 0,
+  "stories": [
+    {
+      "id": "story-1",
+      "title": "Project scaffolding",
+      "description": "Create the directory structure and empty __init__.py files for the reskin pipeline.\n\nCreate directories:\n- utils/reskin/providers/\n- utils/reskin/transforms/\n- utils/reskin/themes/\n- utils/reskin/tests/\n\nCreate empty __init__.py files:\n- utils/reskin/__init__.py\n- utils/reskin/providers/__init__.py\n- utils/reskin/transforms/__init__.py\n- utils/reskin/tests/__init__.py\n\nCreate utils/reskin/.gitignore with content: output/\n\nAcceptance: directories exist, __init__.py files exist, .gitignore contains output/.",
+      "verify": "test -d /workspace/wesnoth/utils/reskin/providers && test -d /workspace/wesnoth/utils/reskin/transforms && test -d /workspace/wesnoth/utils/reskin/themes && test -d /workspace/wesnoth/utils/reskin/tests && test -f /workspace/wesnoth/utils/reskin/__init__.py && test -f /workspace/wesnoth/utils/reskin/providers/__init__.py && test -f /workspace/wesnoth/utils/reskin/transforms/__init__.py && test -f /workspace/wesnoth/utils/reskin/tests/__init__.py && grep -q 'output/' /workspace/wesnoth/utils/reskin/.gitignore",
+      "status": "passed",
+      "retries": 0
+    },
+    {
+      "id": "story-2",
+      "title": "Theme config loading",
+      "description": "Create theme config loading, validation, and two starter theme files.\n\nFiles to create:\n- utils/reskin/config.py — ThemeConfig dataclass, load_theme() function, ValidationError exception\n- utils/reskin/tests/test_config.py — tests for loading by path, loading by name, missing file, missing field\n- utils/reskin/themes/cyberpunk.json — name, description, prompt, palette (browns=#0a0a2e, greens=#00ff88, silvers=#c0c0ff, reds=#ff0044)\n- utils/reskin/themes/fairy_princess.json — name, description, prompt, palette (browns=#e8b4d8, greens=#98fb98, silvers=#fff0f5, reds=#ff69b4)\n\nThemeConfig fields: name (str), description (str), prompt (str), palette (Dict[str, str]).\nRequired fields for validation: name, prompt, palette.\nload_theme() accepts either a file path or a theme name (resolves to themes/<name>.json).\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 2 for full code.",
+      "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_config.py -v",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "story-3",
+      "title": "Asset discovery",
+      "description": "Create asset discovery and classification module.\n\nFiles to create:\n- utils/reskin/discovery.py — AssetInfo dataclass, classify_asset(), discover_assets()\n- utils/reskin/tests/test_discovery.py — tests against real Wesnoth assets\n\nAssetInfo fields: source_path (absolute), relative_path (relative to images dir), category (sprite/portrait/icon).\nclassify_asset() checks path for /units/ -> sprite, /portraits/ -> portrait, /attacks/ -> icon, else unknown.\ndiscover_assets(wesnoth_root, faction, category=None) walks:\n- data/core/images/units/<faction>/*.png for sprites\n- data/core/images/portraits/<portrait_faction>/*.webp for portraits (NOTE: portraits are WebP!)\n- data/core/images/attacks/*.png for icons\n\nIMPORTANT: Portrait dirs use different names than unit dirs. Map: human-loyalists->humans, elves-wood->elves, undead-*->undead, human-magi->humans, human-outlaws->humans, human-peasants->humans.\nIMAGE_EXTENSIONS = {\".png\", \".webp\"}\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 3 for full code.",
+      "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_discovery.py -v",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "story-4",
+      "title": "Provider interface and echo provider",
+      "description": "Create the provider base class and echo (dry-run) provider.\n\nFiles to create:\n- utils/reskin/providers/base.py — ReskinProvider class with transform(image_path, prompt, params) -> bytes that raises NotImplementedError\n- utils/reskin/providers/echo.py — EchoProvider that reads the image with Pillow and returns it as PNG bytes unchanged. Must preserve RGBA transparency.\n- utils/reskin/tests/test_providers.py — tests for base class raising, echo returning valid bytes, echo preserving transparency\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 4 for full code.",
+      "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_providers.py -v",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "story-5",
+      "title": "Manifest progress tracking",
+      "description": "Create the manifest module for tracking which assets have been processed.\n\nFiles to create:\n- utils/reskin/manifest.py — Manifest class\n- utils/reskin/tests/test_manifest.py — tests for create/save/load/mark/summary\n\nManifest.__init__(path, theme, faction, provider) — creates new manifest data dict.\nManifest.load(path) — classmethod, loads existing manifest from JSON file.\nManifest.save() — writes to disk (creates parent dirs with os.makedirs).\nManifest.is_completed(relative_path, source_hash) — True if status=completed AND hash matches.\nManifest.mark_completed(relative_path, source_hash, output_path) — sets status, hash, path, timestamp. Calls save() immediately.\nManifest.mark_failed(relative_path, error) — sets status=failed, error message, increments attempts count. Calls save() immediately.\nManifest.get_status(relative_path) — returns the asset entry dict or None.\nManifest.summary() — returns dict with completed/failed/total counts.\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 5 for full code.",
+      "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_manifest.py -v",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "story-6",
+      "title": "Palette swap transform",
+      "description": "Create the algorithmic palette swap transform for icons.\n\nFiles to create:\n- utils/reskin/transforms/palette_swap.py — palette_swap(image_path, palette) -> bytes\n- utils/reskin/tests/test_palette_swap.py — tests for output validity, color shifting, transparency preservation\n\nHow it works:\n1. Open image as RGBA with Pillow\n2. For each non-transparent pixel, classify into a color family by HSV hue:\n   - reds: hue 345-360 or 0-15\n   - browns: hue 15-45\n   - greens: hue 75-165\n   - silvers: saturation < 0.15 and value > 0.5\n3. If pixel's family has a mapping in the palette, shift to target color:\n   - Use target hue and saturation\n   - Blend brightness: 60% source + 40% target\n4. Output as PNG bytes\n\nHelper functions: _hex_to_rgb, _rgb_to_hsv (uses colorsys), _classify_pixel_color.\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 6 for full code.",
+      "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_palette_swap.py -v",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "story-7",
+      "title": "AI reskin transform",
+      "description": "Create the AI reskin transform module that builds prompts and delegates to a provider.\n\nFiles to create:\n- utils/reskin/transforms/ai_reskin.py — build_prompt(category, style_prompt) and ai_reskin(image_path, category, style_prompt, provider, params=None)\n- utils/reskin/tests/test_ai_reskin.py — tests for prompt building and transform returning valid bytes\n\nPrompt templates:\n- sprite: 'Reskin this 2D pixel art game unit sprite. Preserve transparency, silhouette, and animation pose. Style: {style}'\n- portrait: 'Reskin this fantasy character portrait. Preserve face composition and expression. Style: {style}'\n\nbuild_prompt returns the filled template string.\nai_reskin calls build_prompt then provider.transform() and returns the bytes.\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 7 for full code.",
+      "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_ai_reskin.py -v",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "story-8",
+      "title": "Nano Banana provider stub",
+      "description": "Create the Nano Banana provider with API key validation but a stub transform.\n\nFiles to create:\n- utils/reskin/providers/nano_banana.py — NanoBananaProvider class\n- utils/reskin/tests/test_nano_banana.py — tests for env var loading and missing key error\n\nNanoBananaProvider.__init__(model='default') reads NANO_BANANA_API_KEY from os.environ. Raises ValueError if missing.\ntransform() raises NotImplementedError with message about API integration pending.\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 8 for full code.",
+      "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_nano_banana.py -v",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "story-9",
+      "title": "CLI entry point",
+      "description": "Create the main CLI entry point that wires everything together.\n\nFiles to create:\n- utils/reskin/reskin.py — main CLI script with argparse\n- utils/reskin/tests/test_reskin_cli.py — end-to-end CLI tests via subprocess\n\nIMPORTANT: reskin.py is run as a script, so add sys.path.insert(0, os.path.dirname(__file__)) before imports to ensure local modules are found. Use direct module imports (from config import load_theme), NOT package imports (NOT from utils.reskin.config).\n\nCLI args: --theme (required), --faction (required), --category (sprites/portraits/icons), --provider (default: nano_banana), --dry-run (uses echo provider), --force (ignore manifest), --output-dir, --wesnoth-root.\n\nFlow:\n1. Load theme via load_theme()\n2. Get provider (echo if --dry-run, else by name)\n3. Discover assets via discover_assets()\n4. Load or create manifest\n5. For each asset: check manifest (skip if completed with same hash), process via appropriate transform, update manifest, handle retries (max 3)\n6. Print summary (completed/skipped/failed/total)\n\nTests run the script via subprocess with --dry-run on icons category. Test: dry run produces files, missing theme fails, second run shows skipped assets.\n\nIMPORTANT for test imports: test_reskin_cli.py uses subprocess to run the script directly (sys.executable + script path), NOT pytest imports. WESNOTH_ROOT = os.path.join(os.path.dirname(__file__), '..', '..', '..')\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 9 for full code.",
+      "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_reskin_cli.py -v",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "story-10",
+      "title": "Integration test",
+      "description": "Create a full end-to-end integration test that processes all asset types for human-loyalists.\n\nFiles to create:\n- utils/reskin/tests/test_integration.py — full faction dry run test\n\nTest runs the CLI via subprocess with --dry-run --theme cyberpunk --faction human-loyalists (no --category, so all types). Uses tmp_path for output. Verifies:\n- Exit code 0\n- Manifest has 500+ completed assets\n- Output dirs exist: units/human-loyalists, portraits/humans, attacks\n\nTimeout: 120 seconds (processing 600+ images with echo provider).\n\nAfter this, run the FULL test suite: python -m pytest utils/reskin/tests/ -v to ensure everything works together.\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 10 for full code.",
+      "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/ -v",
+      "status": "pending",
+      "retries": 0
+    }
+  ]
+}
