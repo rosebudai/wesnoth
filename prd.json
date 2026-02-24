@@ -81,7 +81,7 @@
       "title": "Integration test",
       "description": "Create a full end-to-end integration test that processes all asset types for human-loyalists.\n\nFiles to create:\n- utils/reskin/tests/test_integration.py — full faction dry run test\n\nTest runs the CLI via subprocess with --dry-run --theme cyberpunk --faction human-loyalists (no --category, so all types). Uses tmp_path for output. Verifies:\n- Exit code 0\n- Manifest has 500+ completed assets\n- Output dirs exist: units/human-loyalists, portraits/humans, attacks\n\nTimeout: 120 seconds (processing 600+ images with echo provider).\n\nAfter this, run the FULL test suite: python -m pytest utils/reskin/tests/ -v to ensure everything works together.\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 10 for full code.",
       "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/ -v",
-      "status": "pending",
+      "status": "passed",
       "retries": 0
     }
   ]
