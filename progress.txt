@@ -70,3 +70,13 @@ for sprite/portrait, returns bytes, produces valid image).
 All 4 tests passed on first run.
 Status: PASSED
 Status: PASSED
+
+--- Iteration 8 | story-8 | 2026-02-24 22:08:58 ---
+Previous iteration started story-8 but did not create any files.
+
+--- Iteration 9 | story-8 | 2026-02-24 ---
+Created 2 files: providers/nano_banana.py (NanoBananaProvider reads NANO_BANANA_API_KEY from env,
+raises ValueError if missing, transform raises NotImplementedError as stub) and
+tests/test_nano_banana.py (2 tests: env var loading and missing key error).
+All 2 tests passed on first run.
+Status: PASSED
