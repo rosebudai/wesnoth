@@ -59,3 +59,14 @@ color shifting, transparency preservation).
 All 4 tests passed on first run.
 Status: PASSED
 Status: PASSED
+
+--- Iteration 7 | story-7 | 2026-02-24 22:07:36 ---
+Previous iteration started story-7 but did not create any files.
+
+--- Iteration 8 | story-7 | 2026-02-24 ---
+Created 2 files: transforms/ai_reskin.py (build_prompt with category-specific templates,
+ai_reskin delegating to provider) and tests/test_ai_reskin.py (4 tests: prompt building
+for sprite/portrait, returns bytes, produces valid image).
+All 4 tests passed on first run.
+Status: PASSED
+Status: PASSED
