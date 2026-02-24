@@ -37,3 +37,4 @@ providers/echo.py (EchoProvider reads image with Pillow, returns PNG bytes prese
 tests/test_providers.py (3 tests: abstract raises, echo returns valid bytes, echo preserves transparency).
 All 3 tests passed on first run.
 Status: PASSED
+Status: PASSED
