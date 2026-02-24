@@ -95,3 +95,4 @@ Key decisions:
   not output/cyberpunk/human-loyalists/attacks/ (relative_path doesn't include faction for icons).
 All 4 tests passed on first run.
 Status: PASSED
+Status: PASSED
