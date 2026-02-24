@@ -16,3 +16,14 @@ cyberpunk.json and fairy_princess.json theme files.
 All 4 tests passed on first run.
 Status: PASSED
 Status: PASSED
+
+--- Iteration 3 | story-3 | 2026-02-24 22:02:29 ---
+Previous iteration started story-3 but did not create any files.
+
+--- Iteration 4 | story-3 | 2026-02-24 ---
+Created 2 files: discovery.py (AssetInfo dataclass, classify_asset, _collect_images, discover_assets with PORTRAIT_DIR_MAP)
+and test_discovery.py (9 tests against real Wesnoth assets).
+Asset counts verified: 394 sprites, 63 portraits, 173 icons for human-loyalists.
+All 9 tests passed on first run.
+Status: PASSED
+Status: PASSED
