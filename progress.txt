@@ -81,3 +81,17 @@ tests/test_nano_banana.py (2 tests: env var loading and missing key error).
 All 2 tests passed on first run.
 Status: PASSED
 Status: PASSED
+
+--- Iteration 9 | story-9 | 2026-02-24 22:10:05 ---
+Previous iteration started story-9 but did not create any files.
+
+--- Iteration 10 | story-9 | 2026-02-24 ---
+Created 2 files: reskin.py (CLI entry point with argparse, wires config/discovery/manifest/providers/transforms)
+and tests/test_reskin_cli.py (4 subprocess tests: dry run, output files, missing theme, resumability).
+Key decisions:
+- Added both utils/reskin/ and repo root to sys.path so direct imports (reskin.py) and
+  package imports (submodules like echo.py) both work.
+- Fixed plan's test_cli_dry_run_creates_output_files: icons output at output/cyberpunk/attacks/
+  not output/cyberpunk/human-loyalists/attacks/ (relative_path doesn't include faction for icons).
+All 4 tests passed on first run.
+Status: PASSED

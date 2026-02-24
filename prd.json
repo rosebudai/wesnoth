@@ -73,7 +73,7 @@
       "title": "CLI entry point",
       "description": "Create the main CLI entry point that wires everything together.\n\nFiles to create:\n- utils/reskin/reskin.py — main CLI script with argparse\n- utils/reskin/tests/test_reskin_cli.py — end-to-end CLI tests via subprocess\n\nIMPORTANT: reskin.py is run as a script, so add sys.path.insert(0, os.path.dirname(__file__)) before imports to ensure local modules are found. Use direct module imports (from config import load_theme), NOT package imports (NOT from utils.reskin.config).\n\nCLI args: --theme (required), --faction (required), --category (sprites/portraits/icons), --provider (default: nano_banana), --dry-run (uses echo provider), --force (ignore manifest), --output-dir, --wesnoth-root.\n\nFlow:\n1. Load theme via load_theme()\n2. Get provider (echo if --dry-run, else by name)\n3. Discover assets via discover_assets()\n4. Load or create manifest\n5. For each asset: check manifest (skip if completed with same hash), process via appropriate transform, update manifest, handle retries (max 3)\n6. Print summary (completed/skipped/failed/total)\n\nTests run the script via subprocess with --dry-run on icons category. Test: dry run produces files, missing theme fails, second run shows skipped assets.\n\nIMPORTANT for test imports: test_reskin_cli.py uses subprocess to run the script directly (sys.executable + script path), NOT pytest imports. WESNOTH_ROOT = os.path.join(os.path.dirname(__file__), '..', '..', '..')\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 9 for full code.",
       "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_reskin_cli.py -v",
-      "status": "pending",
+      "status": "passed",
       "retries": 0
     },
     {
