@@ -27,3 +27,13 @@ Asset counts verified: 394 sprites, 63 portraits, 173 icons for human-loyalists.
 All 9 tests passed on first run.
 Status: PASSED
 Status: PASSED
+
+--- Iteration 4 | story-4 | 2026-02-24 22:03:57 ---
+Previous iteration started story-4 but did not create any files.
+
+--- Iteration 5 | story-4 | 2026-02-24 ---
+Created 3 files: providers/base.py (ReskinProvider abstract base with NotImplementedError),
+providers/echo.py (EchoProvider reads image with Pillow, returns PNG bytes preserving RGBA),
+tests/test_providers.py (3 tests: abstract raises, echo returns valid bytes, echo preserves transparency).
+All 3 tests passed on first run.
+Status: PASSED

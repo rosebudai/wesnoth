@@ -33,7 +33,7 @@
       "title": "Provider interface and echo provider",
       "description": "Create the provider base class and echo (dry-run) provider.\n\nFiles to create:\n- utils/reskin/providers/base.py — ReskinProvider class with transform(image_path, prompt, params) -> bytes that raises NotImplementedError\n- utils/reskin/providers/echo.py — EchoProvider that reads the image with Pillow and returns it as PNG bytes unchanged. Must preserve RGBA transparency.\n- utils/reskin/tests/test_providers.py — tests for base class raising, echo returning valid bytes, echo preserving transparency\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 4 for full code.",
       "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_providers.py -v",
-      "status": "pending",
+      "status": "passed",
       "retries": 0
     },
     {
