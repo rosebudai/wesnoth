@@ -25,7 +25,7 @@
       "title": "Asset discovery",
       "description": "Create asset discovery and classification module.\n\nFiles to create:\n- utils/reskin/discovery.py — AssetInfo dataclass, classify_asset(), discover_assets()\n- utils/reskin/tests/test_discovery.py — tests against real Wesnoth assets\n\nAssetInfo fields: source_path (absolute), relative_path (relative to images dir), category (sprite/portrait/icon).\nclassify_asset() checks path for /units/ -> sprite, /portraits/ -> portrait, /attacks/ -> icon, else unknown.\ndiscover_assets(wesnoth_root, faction, category=None) walks:\n- data/core/images/units/<faction>/*.png for sprites\n- data/core/images/portraits/<portrait_faction>/*.webp for portraits (NOTE: portraits are WebP!)\n- data/core/images/attacks/*.png for icons\n\nIMPORTANT: Portrait dirs use different names than unit dirs. Map: human-loyalists->humans, elves-wood->elves, undead-*->undead, human-magi->humans, human-outlaws->humans, human-peasants->humans.\nIMAGE_EXTENSIONS = {\".png\", \".webp\"}\n\nSee docs/plans/2026-02-24-reskin-pipeline.md Task 3 for full code.",
       "verify": "cd /workspace/wesnoth && python -m pytest utils/reskin/tests/test_discovery.py -v",
-      "status": "pending",
+      "status": "passed",
       "retries": 0
     },
     {
