@@ -44,12 +44,12 @@ def file_hash(path: str) -> str:
     return h.hexdigest()[:12]
 
 
-def process_asset(asset, theme, provider, output_dir):
+def process_asset(asset, theme, provider, output_dir, palette_only=False):
     """Process a single asset through the appropriate transform.
 
     Returns (output_path, image_bytes) on success, raises on failure.
     """
-    if asset.category == "icon":
+    if asset.category == "icon" or palette_only:
         image_bytes = palette_swap(asset.source_path, theme.palette)
     else:
         image_bytes = ai_reskin(
@@ -77,6 +77,7 @@ def main():
     parser.add_argument("--provider", default="nano_banana", help="AI provider name (default: nano_banana)")
     parser.add_argument("--dry-run", action="store_true", help="Use echo provider (no API calls)")
     parser.add_argument("--force", action="store_true", help="Reprocess all assets, ignore manifest")
+    parser.add_argument("--palette-only", action="store_true", help="Use palette swap for all categories (skip AI provider)")
     parser.add_argument("--output-dir", default=DEFAULT_OUTPUT_DIR, help="Output directory")
     parser.add_argument("--wesnoth-root", default=WESNOTH_ROOT, help="Path to Wesnoth repo root")
 
@@ -128,7 +129,7 @@ def main():
 
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                output_path = process_asset(asset, theme, provider, args.output_dir)
+                output_path = process_asset(asset, theme, provider, args.output_dir, palette_only=args.palette_only)
                 manifest.mark_completed(asset.relative_path, source_hash, output_path)
                 completed += 1
                 print("OK")

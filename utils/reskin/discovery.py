@@ -39,14 +39,15 @@ def classify_asset(relative_path: str) -> str:
 
 
 def _collect_images(directory: str) -> List[str]:
-    """Collect all image files from a directory."""
+    """Collect all image files from a directory, recursively."""
     images = []
     if not os.path.isdir(directory):
         return images
-    for filename in sorted(os.listdir(directory)):
-        if os.path.splitext(filename)[1].lower() in IMAGE_EXTENSIONS:
-            images.append(os.path.join(directory, filename))
-    return images
+    for root, _, files in os.walk(directory):
+        for filename in sorted(files):
+            if os.path.splitext(filename)[1].lower() in IMAGE_EXTENSIONS:
+                images.append(os.path.join(root, filename))
+    return sorted(images)
 
 
 def discover_assets(
