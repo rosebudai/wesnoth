@@ -29,17 +29,32 @@ def _classify_pixel_color(r: int, g: int, b: int) -> str:
     h, s, v = _rgb_to_hsv(r, g, b)
     hue_deg = h * 360
 
+    # Desaturated bright pixels → silvers
     if s < 0.15 and v > 0.5:
         return "silvers"
+    # Very dark or desaturated pixels → grays (tintable)
     if s < 0.1:
+        if v > 0.08:
+            return "grays"
         return "unknown"
 
+    # Chromatic pixels — classify by hue
     if hue_deg <= 15 or hue_deg >= 345:
         return "reds"
     if 15 < hue_deg <= 45:
         return "browns"
-    if 75 <= hue_deg <= 165:
+    if 45 < hue_deg <= 75:
+        return "yellows"
+    if 75 < hue_deg <= 165:
         return "greens"
+    if 165 < hue_deg <= 195:
+        return "cyans"
+    if 195 < hue_deg <= 260:
+        return "blues"
+    if 260 < hue_deg <= 300:
+        return "purples"
+    if 300 < hue_deg < 345:
+        return "magentas"
 
     return "unknown"
 
@@ -75,12 +90,21 @@ def palette_swap(image_path: str, palette: Dict[str, str]) -> bytes:
                 continue
 
             # Preserve relative brightness, shift hue and saturation
-            _, _, src_v = _rgb_to_hsv(r, g, b)
+            src_h, src_s, src_v = _rgb_to_hsv(r, g, b)
             tgt_h, tgt_s, tgt_v = targets[family]
 
-            # Blend: use target hue/sat, mix brightness
-            new_v = (src_v * 0.6) + (tgt_v * 0.4)
-            new_r, new_g, new_b = colorsys.hsv_to_rgb(tgt_h, tgt_s, new_v)
+            if family == "grays":
+                # Tint grays: add target hue with gentle saturation
+                new_v = src_v
+                new_r, new_g, new_b = colorsys.hsv_to_rgb(
+                    tgt_h, min(tgt_s, 0.4), new_v
+                )
+            else:
+                # Chromatic: use target hue/sat, mix brightness
+                new_v = (src_v * 0.6) + (tgt_v * 0.4)
+                new_r, new_g, new_b = colorsys.hsv_to_rgb(
+                    tgt_h, tgt_s, new_v
+                )
 
             pixels[x, y] = (
                 int(new_r * 255),

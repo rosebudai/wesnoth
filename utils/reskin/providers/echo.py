@@ -1,7 +1,10 @@
 """Echo provider — returns the original image unchanged. For testing."""
 
 import io
+import shutil
+
 from PIL import Image
+
 from utils.reskin.providers.base import ReskinProvider
 
 
@@ -13,3 +16,9 @@ class EchoProvider(ReskinProvider):
         buf = io.BytesIO()
         img.save(buf, format="PNG")
         return buf.getvalue()
+
+    def transform_grid(self, grid_path: str, prompt: str,
+                       output_path: str) -> bool:
+        """Copy the grid image unchanged (for dry-run batch testing)."""
+        shutil.copy2(grid_path, output_path)
+        return True

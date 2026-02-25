@@ -32,6 +32,9 @@ def get_provider(name: str) -> ReskinProvider:
     if name == "nano_banana":
         from providers.nano_banana import NanoBananaProvider
         return NanoBananaProvider()
+    if name == "fal_gemini":
+        from providers.fal_gemini import FalGeminiProvider
+        return FalGeminiProvider()
     raise ValueError(f"Unknown provider: {name}")
 
 
@@ -69,6 +72,83 @@ def process_asset(asset, theme, provider, output_dir, palette_only=False):
     return output_path
 
 
+def run_batch(args, theme, provider):
+    """Batch mode: group assets into 4x4 grids and restyle via AI.
+
+    Steps:
+      1. Discover assets
+      2. Build 4x4 grid images (16 sprites each)
+      3. Send each grid to AI provider
+      4. Extract restyled sprites, restore alpha masks, save individually
+    """
+    from transforms.grid_batch import (
+        build_grids,
+        build_grid_prompt,
+        extract_and_save,
+    )
+
+    assets = discover_assets(
+        args.wesnoth_root, args.faction, category=args.category
+    )
+    print(f"Discovered {len(assets)} assets")
+    if not assets:
+        print("No assets found. Check faction name and category.")
+        sys.exit(1)
+
+    theme_output = os.path.join(args.output_dir, theme.name)
+    grids_dir = os.path.join(theme_output, "grids")
+    restyled_dir = os.path.join(theme_output, "restyled")
+    sprites_dir = os.path.join(theme_output)
+
+    # Step 1: Build grids
+    print("\n=== Building grids ===")
+    manifest = build_grids(assets, grids_dir)
+
+    # Step 2: Send each grid to AI provider
+    print("\n=== Restyling grids via AI ===")
+    os.makedirs(restyled_dir, exist_ok=True)
+    total_batches = len(manifest["batches"])
+
+    for i, batch_meta in enumerate(manifest["batches"], 1):
+        batch_id = batch_meta["batch_id"]
+        grid_path = batch_meta["grid_file"]
+        output_path = os.path.join(restyled_dir, f"{batch_id}_restyled.png")
+
+        if not args.force and os.path.exists(output_path):
+            print(f"[{i}/{total_batches}] {batch_id}: skipping (exists)")
+            continue
+
+        n_sprites = len(batch_meta["sprites"])
+        print(
+            f"[{i}/{total_batches}] {batch_id}: "
+            f"{n_sprites} sprites...",
+            end=" ",
+            flush=True,
+        )
+
+        prompt = build_grid_prompt(batch_meta, theme.prompt)
+
+        # Save prompt for debugging
+        prompt_path = os.path.join(restyled_dir, f"{batch_id}_prompt.txt")
+        with open(prompt_path, "w") as f:
+            f.write(prompt)
+
+        ok = provider.transform_grid(grid_path, prompt, output_path)
+        print("OK" if ok else "FAILED")
+
+    # Step 3: Extract individual sprites
+    print("\n=== Extracting sprites ===")
+    tiling = getattr(args, "tiling", False)
+    results = extract_and_save(
+        manifest, restyled_dir, sprites_dir, tiling=tiling
+    )
+
+    print(f"\n--- Summary ---")
+    print(f"Grids:     {total_batches}")
+    print(f"Extracted: {len(results)}")
+    print(f"Output:    {sprites_dir}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Reskin Wesnoth assets into themed styles.")
     parser.add_argument("--theme", required=True, help="Theme name or path to theme JSON")
@@ -78,6 +158,8 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Use echo provider (no API calls)")
     parser.add_argument("--force", action="store_true", help="Reprocess all assets, ignore manifest")
     parser.add_argument("--palette-only", action="store_true", help="Use palette swap for all categories (skip AI provider)")
+    parser.add_argument("--batch", action="store_true", help="Use grid batching (4x4 grids, 16x fewer API calls)")
+    parser.add_argument("--tiling", action="store_true", help="Blend tile edges for seamless terrain (use with --batch)")
     parser.add_argument("--output-dir", default=DEFAULT_OUTPUT_DIR, help="Output directory")
     parser.add_argument("--wesnoth-root", default=WESNOTH_ROOT, help="Path to Wesnoth repo root")
 
@@ -87,15 +169,20 @@ def main():
     theme = load_theme(args.theme)
     print(f"Theme: {theme.name} — {theme.description}")
 
-    # Get provider
-    if args.dry_run:
+    # Get provider (palette-only mode doesn't need a real provider)
+    if args.dry_run or args.palette_only:
         provider = EchoProvider()
         provider_name = "echo"
     else:
         provider = get_provider(args.provider)
         provider_name = args.provider
 
-    # Discover assets
+    # Batch mode: grid-based AI restyling
+    if args.batch:
+        run_batch(args, theme, provider)
+        return
+
+    # Standard mode: process assets one at a time
     assets = discover_assets(args.wesnoth_root, args.faction, category=args.category)
     print(f"Discovered {len(assets)} assets")
 
