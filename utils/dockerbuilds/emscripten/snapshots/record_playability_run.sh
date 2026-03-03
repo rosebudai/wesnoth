@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 cd "${REPO_ROOT}"
 
 EXPERIMENT_ENV_FILE="${WESNOTH_EXPERIMENT_ENV_FILE:-${REPO_ROOT}/utils/dockerbuilds/emscripten/current_experiment.env}"
@@ -55,7 +55,7 @@ result_json_container="/workspace/${result_rel}"
 screenshot_png_container="/workspace/${screenshot_rel}"
 
 run_probe_native() {
-  node "${SCRIPT_DIR}/run_playwright_check.js" \
+  node "${SCRIPT_DIR}/../tests/run_playwright_check.js" \
     "${URL}" \
     "${console_json}" \
     "${result_json}" \
@@ -88,7 +88,7 @@ run_probe_docker() {
       srv=\$!
       cleanup() { kill \${srv} >/dev/null 2>&1 || true; wait \${srv} >/dev/null 2>&1 || true; }
       trap cleanup EXIT
-      node ./run_playwright_check.js \
+      node ./tests/run_playwright_check.js \
         '${URL}' \
         '${console_json_container}' \
         '${result_json_container}' \
