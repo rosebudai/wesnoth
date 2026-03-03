@@ -8,7 +8,7 @@ const path = require("path");
 const { chromium } = require("playwright");
 
 const URL = process.argv[2] || "http://127.0.0.1:8040/";
-const OUT_DIR = process.argv[3] || "/tmp/wesnoth-interactive-test";
+const OUT_DIR = process.argv[3] || ".playwright/screenshots";
 
 async function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));

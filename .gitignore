@@ -246,6 +246,9 @@ LOCAL_APPDATA_FONTCONFIG_CACHE
 # node_modules (ws_proxy_node.js dependency)
 node_modules/
 
+# Playwright test output
+.playwright/
+
 # Claude Code local/session artifacts
 .claude/specs/
 .claude/settings.local.json

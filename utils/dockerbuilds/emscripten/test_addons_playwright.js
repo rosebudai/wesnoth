@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 
 const URL = process.argv[2] || 'http://127.0.0.1:8040/';
-const SDIR = process.argv[3] || '/screenshots';
+const SDIR = process.argv[3] || '.playwright/screenshots';
 
 fs.mkdirSync(SDIR, { recursive: true });
 
