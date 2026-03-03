@@ -6,7 +6,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 BUILD_DIR="${REPO_ROOT}/utils/dockerbuilds/emscriptenbuild"
 SCREENSHOT_DIR="${1:-/tmp/wesnoth-hotseat-docker-test}"
 
@@ -54,7 +54,7 @@ docker run --rm \
     sleep 2
 
     echo "=== Running Playwright hotseat test ==="
-    node ./test_hotseat_playwright.js http://127.0.0.1:8040/ /screenshots
+    node ./tests/test_hotseat_playwright.js http://127.0.0.1:8040/ /screenshots
   '
 
 echo ""

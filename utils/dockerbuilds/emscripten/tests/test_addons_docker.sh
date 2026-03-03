@@ -7,7 +7,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 BUILD_DIR="${REPO_ROOT}/utils/dockerbuilds/emscriptenbuild"
 SCREENSHOT_DIR="${1:-/tmp/wesnoth-addon-docker-test}"
 
@@ -48,7 +48,7 @@ docker run --rm \
     SRV_PID=$!
 
     echo "=== Starting WebSocket proxy on :8041 ==="
-    node ./ws_proxy_node.js --port 8041 -v >/tmp/ws_proxy.log 2>&1 &
+    node ./tests/ws_proxy_node.js --port 8041 -v >/tmp/ws_proxy.log 2>&1 &
     WS_PID=$!
 
     cleanup() {
@@ -64,7 +64,7 @@ docker run --rm \
     sleep 2
 
     echo "=== Running Playwright add-on test ==="
-    node ./test_addons_playwright.js http://127.0.0.1:8040/ /screenshots
+    node ./tests/test_addons_playwright.js http://127.0.0.1:8040/ /screenshots
   '
 
 echo ""
