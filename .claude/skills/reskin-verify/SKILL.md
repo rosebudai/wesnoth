@@ -107,7 +107,13 @@ Run this in the background. Remember to kill `$SRV_PID` when done.
 
 ## Step 3: Capture Screenshots
 
-Use the existing Playwright test pattern from `utils/dockerbuilds/emscripten/test_hotseat_playwright.js` as a reference. Key screenshots to capture:
+Use **agent-driven Playwright MCP** for interactive screenshot capture. This replaces the old hand-written Playwright scripts (which are deprecated for playtesting — see note below).
+
+### Playwright MCP Approach (preferred)
+
+Use the `playwright-capture` skill to drive the browser interactively. The agent can navigate menus, click buttons, wait for animations, and take screenshots at exactly the right moments — no scripting required.
+
+Key screenshots to capture:
 
 | Screenshot | What to navigate to | What it shows |
 |---|---|---|
@@ -115,22 +121,11 @@ Use the existing Playwright test pattern from `utils/dockerbuilds/emscripten/tes
 | `02-battle-scene.png` | Start a game, enter combat | Unit sprites + attack icons in context |
 | `03-unit-info.png` | Click a unit | Portrait + attack icon list |
 
-### Capture script
+Screenshots are saved to `.playwright/screenshots/` (gitignored).
 
-Create a temporary Playwright script or reuse the hotseat test pattern:
+### Legacy Scripts (deprecated for playtesting)
 
-```bash
-SCREENSHOT_DIR=/tmp/reskin-screenshots
-mkdir -p "$SCREENSHOT_DIR"
-
-# Option A: Direct Playwright (if installed locally)
-NODE_PATH=$(npm root -g 2>/dev/null || echo /opt/wesnoth-playwright-node/node_modules) \
-  node utils/dockerbuilds/emscripten/test_hotseat_playwright.js \
-  http://127.0.0.1:8040/ "$SCREENSHOT_DIR"
-
-# Option B: Docker (more reliable, isolated)
-# See utils/dockerbuilds/emscripten/test_hotseat_docker.sh for the full pattern
-```
+The scripts in `utils/dockerbuilds/emscripten/` (`test_hotseat_playwright.js`, `test_multiplayer_playwright.js`, etc.) are **CI smoke tests**, not playtesting tools. They follow fixed click sequences and break when the UI changes. For interactive verification, always use Playwright MCP instead.
 
 ## Step 4: Judge with Gemini
 
@@ -190,7 +185,7 @@ echo "$VERDICT"
 
 ```bash
 kill $SRV_PID 2>/dev/null
-rm -rf /tmp/wesnoth-reskin-build /tmp/reskin-screenshots
+rm -rf /tmp/wesnoth-reskin-build .playwright/screenshots
 ```
 
 ## Common Issues
