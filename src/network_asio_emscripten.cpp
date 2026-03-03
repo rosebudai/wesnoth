@@ -17,7 +17,7 @@
  * Emscripten WebSocket-based implementation of network_asio::connection.
  *
  * Replaces the Boost.Asio TCP/TLS implementation for the web port.
- * Connects to a WebSocket-to-TCP proxy (ws_proxy.py) which bridges
+ * Connects to a WebSocket-to-TCP proxy (ws_proxy_node.js) which bridges
  * to the real campaignd/wesnothd TCP server.
  *
  * The Wesnoth wire protocol is preserved unchanged:
