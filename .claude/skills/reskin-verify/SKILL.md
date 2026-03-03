@@ -125,7 +125,7 @@ Screenshots are saved to `.playwright/screenshots/` (gitignored).
 
 ### Legacy Scripts (deprecated for playtesting)
 
-The scripts in `utils/dockerbuilds/emscripten/` (`test_hotseat_playwright.js`, `test_multiplayer_playwright.js`, etc.) are **CI smoke tests**, not playtesting tools. They follow fixed click sequences and break when the UI changes. For interactive verification, always use Playwright MCP instead.
+The scripts in `utils/dockerbuilds/emscripten/tests/` (`test_hotseat_playwright.js`, `test_multiplayer_playwright.js`, etc.) are **CI smoke tests**, not playtesting tools. They follow fixed click sequences and break when the UI changes. For interactive verification, always use Playwright MCP instead.
 
 ## Step 4: Judge with Gemini
 

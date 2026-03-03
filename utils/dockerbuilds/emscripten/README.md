@@ -65,3 +65,20 @@ If `WESNOTH_USE_PTHREADS=1`, browser runtime requires cross-origin isolation. Se
 - `Cross-Origin-Embedder-Policy: require-corp`
 
 If assets are loaded from other origins, those resources must also be CORS/CORP-compatible.
+
+## Directory structure
+
+```
+emscripten/
+├── Dockerfile                  # Build container definition
+├── build-web.sh                # Main build script
+├── current_experiment.env      # Active experiment flags
+├── index.html                  # Web build landing page
+├── serve_coi.py                # Dev server with COOP/COEP headers
+├── tests/                      # Playwright test scripts, Docker test runners, WebSocket proxy
+├── snapshots/                  # Build history recording, snapshot/restore utilities
+├── vcpkg-overlay-ports/        # Emscripten vcpkg port overlays
+├── vcpkg-overlay-triplets/     # Wasm32 triplet definitions
+├── cmake-modules/              # Emscripten CMake Find module overrides
+└── runtime-seed/               # Default runtime preference placeholders
+```

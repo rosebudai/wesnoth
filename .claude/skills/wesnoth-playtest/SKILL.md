@@ -91,7 +91,7 @@ After capturing screenshots, use the `visual-judge` skill for pixel-level analys
 
 <HARD-GATE>
 Do NOT write new Playwright scripts for playtesting. Use Playwright MCP interactively.
-The legacy scripts (`test_hotseat_playwright.js`, `test_multiplayer_playwright.js`, etc.)
+The legacy scripts in `utils/dockerbuilds/emscripten/tests/` (`test_hotseat_playwright.js`, `test_multiplayer_playwright.js`, etc.)
 are CI smoke tests only — they break on UI changes and can't adapt to what's on screen.
 </HARD-GATE>
 
