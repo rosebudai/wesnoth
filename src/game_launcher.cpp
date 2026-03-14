@@ -52,10 +52,12 @@
 #if !defined(__EMSCRIPTEN__)
 
 #ifdef __APPLE__
+#include <TargetConditionals.h>
 
+#if !TARGET_OS_IPHONE
 //
 // HACK: MacCompileStuff is currently on 1.86, so it could use the v2 API,
-// but we need to update the libs manually to link against boost::process.
+// but macOS packaging still links against the old boost::process v1 layout.
 //
 // -- vultraz, 2025-05-12
 //
@@ -63,6 +65,7 @@
 #error MacCompileStuff has been updated. Remove this block and the accompanying __APPLE__ checks below.
 #endif
 #include <boost/process/v1/child.hpp>
+#endif
 
 #elif BOOST_VERSION >= 108600
 
@@ -807,7 +810,9 @@ bool game_launcher::goto_editor()
 
 void game_launcher::start_wesnothd()
 {
-#ifdef __EMSCRIPTEN__
+#if defined(__APPLE__) && TARGET_OS_IPHONE
+	throw game::mp_server_error("Starting MP server is not supported on iOS builds.");
+#elif defined(__EMSCRIPTEN__)
 	throw game::mp_server_error("Embedded wesnothd is not supported on web builds.");
 #else
 	std::string wesnothd_program = "";
