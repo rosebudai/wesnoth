@@ -16,15 +16,18 @@ docker_image="${DOCKERLOCALIMAGE:-wesnoth/wesnoth:emscripten}"
 output_dir="${OUTPUT_DIR:-${EXP_OUTPUT_DIR:-../emscriptenbuild}}"
 vcpkg_cache_dir="${VCPKG_CACHE_DIR:-${EXP_VCPKG_CACHE_DIR:-../emscripten-vcpkg-cache}}"
 web_history_root="${WESNOTH_WEB_HISTORY_ROOT:-${EXP_WESNOTH_WEB_HISTORY_ROOT:-${repo_root}/output}}"
-experiment_id="${WESNOTH_EXPERIMENT_ID:-${EXP_ID:-UNSET}}"
+# The experiment ID only labels the build-history/bundle output; it is optional.
+experiment_id="${WESNOTH_EXPERIMENT_ID:-${EXP_ID:-local}}"
 experiment_note="${WESNOTH_EXPERIMENT_NOTE:-${EXP_DESCRIPTION:-}}"
-use_pthreads="${WESNOTH_USE_PTHREADS:-${EXP_WESNOTH_USE_PTHREADS:-1}}"
-proxy_to_pthread="${WESNOTH_PROXY_TO_PTHREAD:-${EXP_WESNOTH_PROXY_TO_PTHREAD:-1}}"
+# Defaults are the supported configuration: single-threaded JSPI build.
+use_pthreads="${WESNOTH_USE_PTHREADS:-${EXP_WESNOTH_USE_PTHREADS:-0}}"
+proxy_to_pthread="${WESNOTH_PROXY_TO_PTHREAD:-${EXP_WESNOTH_PROXY_TO_PTHREAD:-0}}"
 pthread_pool_size="${WESNOTH_PTHREAD_POOL_SIZE:-${EXP_WESNOTH_PTHREAD_POOL_SIZE:-4}}"
 package_data="${WESNOTH_PACKAGE_DATA:-${EXP_WESNOTH_PACKAGE_DATA:-1}}"
 data_lz4="${WESNOTH_DATA_LZ4:-${EXP_WESNOTH_DATA_LZ4:-auto}}"
 use_vcpkg="${WESNOTH_USE_VCPKG:-${EXP_WESNOTH_USE_VCPKG:-1}}"
 vcpkg_root="${WESNOTH_VCPKG_ROOT:-${EXP_WESNOTH_VCPKG_ROOT:-/vcpkg-cache/vcpkg}}"
+vcpkg_commit="${WESNOTH_VCPKG_COMMIT:-${EXP_WESNOTH_VCPKG_COMMIT:-}}"
 vcpkg_install_root="${WESNOTH_VCPKG_INSTALL_ROOT:-${EXP_WESNOTH_VCPKG_INSTALL_ROOT:-/vcpkg-cache/installed}}"
 vcpkg_host_triplet="${WESNOTH_VCPKG_HOST_TRIPLET:-${EXP_WESNOTH_VCPKG_HOST_TRIPLET:-}}"
 vcpkg_allow_unsupported="${WESNOTH_VCPKG_ALLOW_UNSUPPORTED:-${EXP_WESNOTH_VCPKG_ALLOW_UNSUPPORTED:-0}}"
@@ -34,32 +37,19 @@ vcpkg_binary_cache="${WESNOTH_VCPKG_BINARY_CACHE:-${EXP_WESNOTH_VCPKG_BINARY_CAC
 vcpkg_binary_sources="${WESNOTH_VCPKG_BINARY_SOURCES:-${EXP_WESNOTH_VCPKG_BINARY_SOURCES:-}}"
 parallel_jobs="${WESNOTH_PARALLEL_JOBS:-${EXP_WESNOTH_PARALLEL_JOBS:-}}"
 cmake_build_type="${WESNOTH_CMAKE_BUILD_TYPE:-${EXP_WESNOTH_CMAKE_BUILD_TYPE:-}}"
-extra_em_flags="${WESNOTH_EXTRA_EM_FLAGS:-${EXP_WESNOTH_EXTRA_EM_FLAGS:-}}"
-extra_em_link_flags="${WESNOTH_EXTRA_EM_LINK_FLAGS:-${EXP_WESNOTH_EXTRA_EM_LINK_FLAGS:-}}"
+default_em_flags="-sLZ4=1 -sJSPI"
+default_em_link_flags="-lidbfs.js"
+extra_em_flags="${WESNOTH_EXTRA_EM_FLAGS:-${EXP_WESNOTH_EXTRA_EM_FLAGS:-${default_em_flags}}}"
+extra_em_link_flags="${WESNOTH_EXTRA_EM_LINK_FLAGS:-${EXP_WESNOTH_EXTRA_EM_LINK_FLAGS:-${default_em_link_flags}}}"
 extra_cmake_args="${WESNOTH_EXTRA_CMAKE_ARGS:-${EXP_WESNOTH_EXTRA_CMAKE_ARGS:-}}"
 boost_dir="${WESNOTH_BOOST_DIR:-${EXP_WESNOTH_BOOST_DIR:-}}"
 cmake_prefix_path="${WESNOTH_CMAKE_PREFIX_PATH:-${EXP_WESNOTH_CMAKE_PREFIX_PATH:-}}"
-vcpkg_target_triplet_override="${WESNOTH_VCPKG_TARGET_TRIPLET:-${EXP_WESNOTH_VCPKG_TARGET_TRIPLET:-}}"
-allow_untracked_experiment="${WESNOTH_ALLOW_UNTRACKED_EXPERIMENT:-0}"
-
-if [ -n "${vcpkg_target_triplet_override}" ]; then
-    vcpkg_target_triplet="${vcpkg_target_triplet_override}"
-elif [ "$use_pthreads" = "1" ]; then
-    vcpkg_target_triplet="wasm32-emscripten-pthreads"
-else
-    vcpkg_target_triplet="wasm32-emscripten"
-fi
+vcpkg_target_triplet="${WESNOTH_VCPKG_TARGET_TRIPLET:-${EXP_WESNOTH_VCPKG_TARGET_TRIPLET:-wasm32-emscripten}}"
 
 echo "experiment_id=${experiment_id}"
 echo "experiment_note=${experiment_note}"
 echo "experiment_env_file=${experiment_env_file}"
-echo "resolved_flags=WESNOTH_USE_PTHREADS=${use_pthreads} WESNOTH_PROXY_TO_PTHREAD=${proxy_to_pthread} WESNOTH_CMAKE_BUILD_TYPE=${cmake_build_type} WESNOTH_EXTRA_EM_FLAGS=${extra_em_flags} WESNOTH_EXTRA_CMAKE_ARGS=${extra_cmake_args}"
-
-if [ "${experiment_id}" = "UNSET" ] && [ "${allow_untracked_experiment}" != "1" ]; then
-    echo "ERROR: experiment ID is unset. Update ${experiment_env_file} (EXP_ID=E##) before building." >&2
-    echo "Set WESNOTH_ALLOW_UNTRACKED_EXPERIMENT=1 only for temporary local debugging." >&2
-    exit 1
-fi
+echo "resolved_flags=WESNOTH_USE_PTHREADS=${use_pthreads} WESNOTH_PROXY_TO_PTHREAD=${proxy_to_pthread} WESNOTH_CMAKE_BUILD_TYPE=${cmake_build_type} WESNOTH_EXTRA_EM_FLAGS=${extra_em_flags} WESNOTH_EXTRA_EM_LINK_FLAGS=${extra_em_link_flags} WESNOTH_EXTRA_CMAKE_ARGS=${extra_cmake_args}"
 
 rm -rf "${output_dir}"
 mkdir -p "${output_dir}" || exit
@@ -99,6 +89,7 @@ docker run --rm \
     -e WESNOTH_DATA_LZ4="${data_lz4}" \
     -e WESNOTH_USE_VCPKG="${use_vcpkg}" \
     -e WESNOTH_VCPKG_ROOT="${vcpkg_root}" \
+    -e WESNOTH_VCPKG_COMMIT="${vcpkg_commit}" \
     -e WESNOTH_VCPKG_INSTALL_ROOT="${vcpkg_install_root}" \
     -e WESNOTH_VCPKG_TARGET_TRIPLET="${vcpkg_target_triplet}" \
     -e WESNOTH_VCPKG_HOST_TRIPLET="${vcpkg_host_triplet}" \

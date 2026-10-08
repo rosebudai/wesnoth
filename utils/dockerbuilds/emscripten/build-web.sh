@@ -7,13 +7,22 @@ build_dir="${WESNOTH_BUILD_DIR:-/build/wesnoth-web}"
 output_dir="${WESNOTH_OUTPUT_DIR:-/output}"
 build_type="${WESNOTH_CMAKE_BUILD_TYPE:-RelWithDebInfo}"
 jobs="${WESNOTH_PARALLEL_JOBS:-$(nproc)}"
-use_pthreads="${WESNOTH_USE_PTHREADS:-1}"
-proxy_to_pthread="${WESNOTH_PROXY_TO_PTHREAD:-1}"
+# Defaults match the supported configuration: single-threaded JSPI build.
+use_pthreads="${WESNOTH_USE_PTHREADS:-0}"
+proxy_to_pthread="${WESNOTH_PROXY_TO_PTHREAD:-0}"
+: "${WESNOTH_EXTRA_EM_FLAGS=-sLZ4=1 -sJSPI}"
+: "${WESNOTH_EXTRA_EM_LINK_FLAGS=-lidbfs.js}"
 pthread_pool_size="${WESNOTH_PTHREAD_POOL_SIZE:-4}"
 package_data="${WESNOTH_PACKAGE_DATA:-1}"
 data_lz4="${WESNOTH_DATA_LZ4:-auto}"
 use_vcpkg="${WESNOTH_USE_VCPKG:-1}"
 vcpkg_root="${WESNOTH_VCPKG_ROOT:-/vcpkg-cache/vcpkg}"
+# Pin the vcpkg checkout (scripts, helper ports and the vcpkg tool version).
+# Cloning vcpkg master makes the build drift: the overlay ports in
+# vcpkg-overlay-ports/ were taken from this commit (2026-02-20), and newer
+# vcpkg scripts/tools are not guaranteed to work with them. Port versions
+# still come from "builtin-baseline" in vcpkg.json.
+vcpkg_commit="${WESNOTH_VCPKG_COMMIT:-05442024c3fda64320bd25d2251cc9807b84fb6f}"
 vcpkg_install_root="${WESNOTH_VCPKG_INSTALL_ROOT:-/vcpkg-cache/installed}"
 vcpkg_target_triplet="${WESNOTH_VCPKG_TARGET_TRIPLET:-wasm32-emscripten}"
 vcpkg_allow_unsupported="${WESNOTH_VCPKG_ALLOW_UNSUPPORTED:-0}"
@@ -48,6 +57,14 @@ em_flags=(
 )
 em_link_flags=()
 pthreads_cmake=OFF
+
+if [[ "$use_pthreads" == "1" && "$vcpkg_target_triplet" == "wasm32-emscripten" ]]; then
+    # The wasm32-emscripten triplet builds dependencies without shared memory;
+    # the pthreads triplet was removed because that variant was not maintained.
+    echo "ERROR: WESNOTH_USE_PTHREADS=1 needs a pthreads-enabled vcpkg triplet (WESNOTH_VCPKG_TARGET_TRIPLET)." >&2
+    echo "The supported configuration is the default single-threaded JSPI build (WESNOTH_USE_PTHREADS=0)." >&2
+    exit 1
+fi
 
 if [[ "$use_pthreads" == "1" ]]; then
     pthreads_cmake=ON
@@ -86,6 +103,8 @@ cmake_args=(
     "-DENABLE_DESKTOP_ENTRY=OFF"
     "-DENABLE_APPDATA_FILE=OFF"
     "-DWESNOTH_EMSCRIPTEN_PTHREADS=${pthreads_cmake}"
+    # Emscripten-specific FindIconv/FindThreads overrides (cross-compile safe).
+    "-DCMAKE_MODULE_PATH=${source_dir}/utils/dockerbuilds/emscripten/cmake-modules"
     "-DCMAKE_C_FLAGS=${em_flags[*]}"
     "-DCMAKE_CXX_FLAGS=${em_flags[*]}"
     "-DCMAKE_EXE_LINKER_FLAGS=${em_flags[*]} ${em_link_flags[*]}"
@@ -118,11 +137,23 @@ if [[ "$use_vcpkg" == "1" ]]; then
     export VCPKG_DEFAULT_BINARY_CACHE="$vcpkg_binary_cache"
     export VCPKG_BINARY_SOURCES="${WESNOTH_VCPKG_BINARY_SOURCES:-clear;files,${vcpkg_binary_cache},readwrite}"
 
-    if [[ ! -d "$vcpkg_root/.git" ]]; then
-        echo "Cloning vcpkg into $vcpkg_root"
-        git clone --depth 1 https://github.com/microsoft/vcpkg "$vcpkg_root"
-    fi
     git config --global --add safe.directory "$vcpkg_root" >/dev/null 2>&1 || true
+    if [[ ! -d "$vcpkg_root/.git" ]]; then
+        echo "Initializing vcpkg checkout in $vcpkg_root"
+        git init -q "$vcpkg_root"
+        git -C "$vcpkg_root" remote add origin https://github.com/microsoft/vcpkg
+    fi
+
+    # Check out the pinned vcpkg commit (also migrates caches created by older
+    # versions of this script, which cloned whatever master was at the time).
+    vcpkg_head="$(git -C "$vcpkg_root" rev-parse -q --verify HEAD 2>/dev/null || true)"
+    if [[ "$vcpkg_head" != "$vcpkg_commit" ]]; then
+        echo "Checking out vcpkg ${vcpkg_commit}"
+        git -C "$vcpkg_root" fetch --depth 1 origin "$vcpkg_commit"
+        git -C "$vcpkg_root" checkout -q --force --detach FETCH_HEAD
+        # The tool binary must match the checkout's bootstrap metadata.
+        rm -f "$vcpkg_root/vcpkg"
+    fi
 
     # The project pins a vcpkg baseline commit; fetch it when using a shallow clone.
     if [[ -f "${source_dir}/vcpkg.json" ]]; then

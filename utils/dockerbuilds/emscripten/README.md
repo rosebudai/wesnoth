@@ -2,12 +2,21 @@
 
 This directory provides a Dockerized build environment for creating a WebAssembly build of Wesnoth.
 
-## Build the image
+## Prerequisites
 
-From `utils/dockerbuilds`:
+A git checkout with submodules (the Lua sources are a submodule; a GitHub
+"Download ZIP" archive does not include them):
 
 ```sh
-./make_emscripten_image
+git submodule update --init --recursive
+```
+
+## Build the image
+
+From the repository root (the script can be run from any directory):
+
+```sh
+utils/dockerbuilds/make_emscripten_image
 ```
 
 By default this builds the image tag `wesnoth/wesnoth:emscripten`.
@@ -15,15 +24,21 @@ The image currently pins the Emscripten SDK base image to `5.0.7`.
 
 ## Build Wesnoth for web
 
-From `utils/dockerbuilds`:
+From the repository root:
 
 ```sh
-./make_emscripten_build
+utils/dockerbuilds/make_emscripten_build
 ```
+
+With no extra settings this builds the supported configuration: the
+single-threaded JSPI build (`WESNOTH_USE_PTHREADS=0`,
+`WESNOTH_EXTRA_EM_FLAGS='-sLZ4=1 -sJSPI'`, `WESNOTH_EXTRA_EM_LINK_FLAGS='-lidbfs.js'`).
 
 Output artifacts are written to `utils/dockerbuilds/emscriptenbuild/`.
 Dependency cache and built libraries are kept in `utils/dockerbuilds/emscripten-vcpkg-cache/`.
-The wrapper reads `emscripten/current_experiment.env` first if that file exists,
+vcpkg is checked out at a pinned commit (see `WESNOTH_VCPKG_COMMIT` below), so a
+fresh build uses the same vcpkg scripts the overlay ports were written against.
+The wrapper reads `emscripten/current_experiment.env` first if that optional file exists,
 then lets environment variables override those defaults. Docker must be able to
 bind-mount the checkout, output directory, and cache directory. If you run
 Docker from inside a devcontainer that talks to a host Docker daemon, run these
@@ -39,20 +54,8 @@ WESNOTH_WEB_HISTORY_ROOT=/tmp/wesnoth-emscripten-history \
 ./make_emscripten_build
 ```
 
-The single-threaded JSPI variant used for browser smoke testing can be built
-with:
-
-```sh
-OUTPUT_DIR=/tmp/wesnoth-emscriptenbuild \
-VCPKG_CACHE_DIR=/tmp/wesnoth-emscripten-vcpkg-cache \
-WESNOTH_WEB_HISTORY_ROOT=/tmp/wesnoth-emscripten-history \
-WESNOTH_USE_PTHREADS=0 \
-WESNOTH_PROXY_TO_PTHREAD=0 \
-WESNOTH_EXTRA_CMAKE_ARGS='-DCMAKE_MODULE_PATH=/wesnoth/utils/dockerbuilds/emscripten/cmake-modules' \
-WESNOTH_EXTRA_EM_FLAGS='-sLZ4=1 -sJSPI' \
-WESNOTH_EXTRA_EM_LINK_FLAGS='-lidbfs.js' \
-./make_emscripten_build
-```
+The defaults above are the single-threaded JSPI variant used for browser smoke
+testing; the `cmake-modules/` overrides are always added to `CMAKE_MODULE_PATH`.
 
 Expected build outputs include:
 
@@ -105,15 +108,17 @@ node ./run_playwright_check.js \
 - `OUTPUT_DIR`: override output directory (default `../emscriptenbuild`).
 - `VCPKG_CACHE_DIR`: override persistent vcpkg cache directory (default `../emscripten-vcpkg-cache`).
 - `WESNOTH_WEB_HISTORY_ROOT`: override the directory used for build-history text files and immutable build bundles (default `../../output` from `utils/dockerbuilds`).
-- `WESNOTH_USE_PTHREADS`: `1` (default) builds a SharedArrayBuffer/pthreads variant, `0` disables pthreads.
-- `WESNOTH_PROXY_TO_PTHREAD`: `1` (default) enables `-sPROXY_TO_PTHREAD=1`; set `0` to keep the main thread as the primary runtime thread.
+- `WESNOTH_EXPERIMENT_ID`: optional label used to name build-history files and bundles (default `local`).
+- `WESNOTH_USE_PTHREADS`: `0` (default) builds the single-threaded JSPI variant. `1` requests a SharedArrayBuffer/pthreads variant, which is unsupported: it needs a pthreads-enabled vcpkg triplet via `WESNOTH_VCPKG_TARGET_TRIPLET`, and none ships in `vcpkg-overlay-triplets/`.
+- `WESNOTH_PROXY_TO_PTHREAD`: `0` (default); `1` enables `-sPROXY_TO_PTHREAD=1` (pthreads builds only).
 - `WESNOTH_PTHREAD_POOL_SIZE`: size for `-sPTHREAD_POOL_SIZE` (default `4`); set `0` to omit the flag.
 - `WESNOTH_PACKAGE_DATA`: set `0` to skip `wesnoth.data` and `wesnoth.data.js` generation; default `1`.
 - `WESNOTH_DATA_LZ4`: `auto` follows `-sLZ4=1`; set `1` or `0` to force file-packager compression behavior.
 - `WESNOTH_USE_VCPKG`: `1` (default) installs dependencies through vcpkg for `wasm32-emscripten`.
 - `WESNOTH_VCPKG_ROOT`: vcpkg checkout location inside the container (default `/vcpkg-cache/vcpkg`).
+- `WESNOTH_VCPKG_COMMIT`: vcpkg commit (or ref) to check out (default `05442024c3fda64320bd25d2251cc9807b84fb6f`, the commit the overlay ports were taken from). An existing cache checkout is moved to this commit automatically.
 - `WESNOTH_VCPKG_INSTALL_ROOT`: vcpkg installed tree (default `/vcpkg-cache/installed`).
-- `WESNOTH_VCPKG_TARGET_TRIPLET`: auto-defaults to `wasm32-emscripten-pthreads` when `WESNOTH_USE_PTHREADS=1`, otherwise `wasm32-emscripten`.
+- `WESNOTH_VCPKG_TARGET_TRIPLET`: vcpkg target triplet (default `wasm32-emscripten`, from `vcpkg-overlay-triplets/`).
 - `WESNOTH_VCPKG_HOST_TRIPLET`: optional host triplet override (auto-detected if unset).
 - `WESNOTH_VCPKG_ALLOW_UNSUPPORTED`: set `1` to pass `--allow-unsupported` to vcpkg.
 - `WESNOTH_VCPKG_OVERLAY_PORTS`: overlay port directory (default `/wesnoth/utils/dockerbuilds/emscripten/vcpkg-overlay-ports`).
@@ -122,8 +127,8 @@ node ./run_playwright_check.js \
 - `WESNOTH_VCPKG_BINARY_SOURCES`: optional override for `VCPKG_BINARY_SOURCES`.
 - `WESNOTH_PARALLEL_JOBS`: number of build jobs.
 - `WESNOTH_CMAKE_BUILD_TYPE`: CMake build type (`RelWithDebInfo`, `Release`, etc.).
-- `WESNOTH_EXTRA_EM_FLAGS`: additional Emscripten flags appended to compile/link flags.
-- `WESNOTH_EXTRA_EM_LINK_FLAGS`: additional Emscripten flags appended only to linker flags (useful for `--preload-file`).
+- `WESNOTH_EXTRA_EM_FLAGS`: Emscripten flags appended to compile/link flags (default `-sLZ4=1 -sJSPI`; setting it replaces the default, so keep `-sJSPI`).
+- `WESNOTH_EXTRA_EM_LINK_FLAGS`: Emscripten flags appended only to linker flags (default `-lidbfs.js`, needed for save persistence; setting it replaces the default).
 - `WESNOTH_EXTRA_CMAKE_ARGS`: extra CMake `-D...` args.
 - `WESNOTH_BOOST_DIR`: optional `BoostConfig.cmake` directory for an Emscripten-compatible Boost build.
 - `WESNOTH_CMAKE_PREFIX_PATH`: optional additional CMake prefix path (for cross-compiled dependencies).

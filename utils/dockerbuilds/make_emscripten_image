@@ -2,5 +2,7 @@
 
 set -xeu
 
-cd emscripten
+# Resolve paths relative to this script so it works from any directory
+# (e.g. `utils/dockerbuilds/make_emscripten_image` from the repo root).
+cd "$(dirname -- "$0")/emscripten"
 docker build -t "${DOCKERLOCALIMAGE:-wesnoth/wesnoth:emscripten}" .
